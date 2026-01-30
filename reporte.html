@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Enviar Reporte</title>
+<style>
+body{font-family:Arial,Helvetica,sans-serif;padding:20px;background:linear-gradient(135deg,#6a11cb,#2575fc);color:#111}
+.card{background:#fff;border-radius:10px;padding:16px;max-width:680px;margin:auto;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+label{display:block;margin-top:12px;font-weight:600}
+input[type=text],textarea{width:100%;padding:10px;border-radius:6px;border:1px solid #ccc;margin-top:6px}
+button{margin-top:12px;padding:10px 14px;border-radius:8px;border:none;background:#2563eb;color:white;cursor:pointer}
+.small{font-size:.9em;color:#555}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+</style>
+</head>
+<body>
+<div class="card">
+  <h2>📤 Enviar Reporte</h2>
+  <p class="small">Completa las preguntas y luego presiona <strong>Generar y abrir WhatsApp</strong>. Se copiará el mensaje al portapapeles y se abrirá WhatsApp con el texto prellenado (debes seleccionar el grupo y enviar manualmente).</p>
+
+  <div id="info"></div>
+
+  <label for="capitan">¿Quién es el capitán?</label>
+  <input id="capitan" type="text" placeholder="Ej: Mario"> 
+
+  <label for="territorio">¿Qué territorio se hizo?</label>
+  <input id="territorio" type="text" placeholder="Ej: 11"> 
+
+  <label for="trabajados">¿Cuáles se trabajó? (separar con y/o , )</label>
+  <input id="trabajados" type="text" placeholder="Ej: a y b"> 
+
+  <label for="pendientes">¿Cuáles quedaron pendiente? (separar con y/o , )</label>
+  <input id="pendientes" type="text" placeholder="Ej: c y d"> 
+
+  <div class="actions">
+    <button onclick="generarYAbrir()">Generar y abrir WhatsApp</button>
+    <button onclick="copiarMensaje()" style="background:#10b981">Copiar mensaje</button>
+    <a id="grupoLink" href="https://chat.whatsapp.com/I6ZgRMuKvQEFZyKbWUx7BT?mode=gi_t" target="_blank" style="text-decoration:none"><button style="background:#f59e0b">Abrir grupo (invitación)</button></a>
+    <a id="volver" href="index.html" style="margin-left:auto;align-self:center;text-decoration:none"><button style="background:#6b7280">Volver</button></a>
+  </div>
+
+  <label for="mensaje">Mensaje generado</label>
+  <textarea id="mensaje" rows="4" readonly></textarea>
+</div>
+
+<script>
+// Leer parámetros de querystring
+const urlParams=new URLSearchParams(window.location.search);
+const dia=urlParams.get('dia');
+const codigo=urlParams.get('codigo');
+
+if(dia && codigo){
+  document.getElementById('info').innerHTML=`<p class="small">Reporte para el día <strong>${dia}</strong> con código <strong>${codigo}</strong></p>`;
+}
+
+function construirMensaje(cap, terr, trab, pen){
+  // Formato EXACTO pedido (todo en minúsculas en las claves y punto final):
+  const msg = `capitan: ${cap}. territorio: ${terr}. cuales se trabajo: ${trab}. lo pendiente territorios: ${pen}.`;
+  return msg.toLowerCase();
+}
+
+function generarYAbrir(){
+  const cap=document.getElementById('capitan').value.trim() || '---';
+  const terr=document.getElementById('territorio').value.trim() || '---';
+  const trab=document.getElementById('trabajados').value.trim() || '---';
+  const pen=document.getElementById('pendientes').value.trim() || '---';
+
+  const mensaje=construirMensaje(cap,terr,trab,pen);
+  document.getElementById('mensaje').value=mensaje;
+
+  // Copiar al portapapeles
+  navigator.clipboard.writeText(mensaje).then(()=>{
+    alert('✅ Mensaje copiado. Se abrirá WhatsApp con el texto prellenado. Selecciona el grupo y presiona enviar.');
+    // Abrir WhatsApp con el texto prellenado en una nueva pestaña
+    const waUrl = 'https://api.whatsapp.com/send?text='+encodeURIComponent(mensaje);
+    window.open(waUrl, '_blank');
+  }).catch(()=>{
+    // Si falla el copiado, aún intentamos abrir WhatsApp
+    const waUrl = 'https://api.whatsapp.com/send?text='+encodeURIComponent(mensaje);
+    window.open(waUrl, '_blank');
+    alert('No se pudo copiar automáticamente, pero se abrió WhatsApp. Copia manualmente el mensaje si necesitas.');
+  });
+}
+
+function copiarMensaje(){
+  const mensaje=document.getElementById('mensaje').value;
+  if(!mensaje){
+    alert('Primero genera el mensaje');
+    return;
+  }
+  navigator.clipboard.writeText(mensaje).then(()=>{
+    alert('✅ Mensaje copiado al portapapeles');
+  }).catch(()=>alert('No se pudo copiar automáticamente'));
+}
+</script>
+</body>
+</html>
